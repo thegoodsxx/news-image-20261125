@@ -8,9 +8,11 @@
 import { copyFileSync, existsSync, mkdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 
-interface ImageDimensions {
+interface ImageHeaderInfo {
   width: number;
   height: number;
+  bitDepth: number;
+  colorType: number;
 }
 
 function formatBytes(totalBytes: number): string {
@@ -21,10 +23,10 @@ function formatBytes(totalBytes: number): string {
   return `${kibibytes} KiB (${totalBytes.toLocaleString()} bytes)`;
 }
 
-function validatePng(payload: Buffer): ImageDimensions {
+function validatePng(payload: Buffer): ImageHeaderInfo {
   const EXPECTED_MAGIC = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
-  if (payload.length < 24) {
-    throw new Error(`Buffer length (${payload.length} bytes) is insufficient for a valid PNG file (requires >= 24 bytes)`);
+  if (payload.length < 26) {
+    throw new Error(`Buffer length (${payload.length} bytes) is insufficient for a valid PNG header with bit depth and colour type (requires >= 26 bytes)`);
   }
 
   for (let index = 0; index < EXPECTED_MAGIC.length; index++) {
@@ -47,7 +49,10 @@ function validatePng(payload: Buffer): ImageDimensions {
     throw new Error(`Corrupted PNG dimensions in IHDR header: width=${width}, height=${height}`);
   }
 
-  return { width, height };
+  const bitDepth = payload.readUInt8(24);
+  const colorType = payload.readUInt8(25);
+
+  return { width, height, bitDepth, colorType };
 }
 
 function main(): void {
@@ -90,10 +95,14 @@ function main(): void {
     throw new Error(`Byte size mismatch after copy: expected source size ${sourceStats.size} B, got destination size ${destinationStats.size} B`);
   }
 
-  const copiedBytes = readFileSync(destinationPath);
-  const { width, height } = validatePng(copiedBytes);
+  if (destinationStats.mtimeMs < sourceStats.mtimeMs) {
+    throw new Error(`Copied file modification time (${destinationStats.mtimeMs}) cannot be older than source file (${sourceStats.mtimeMs})`);
+  }
 
-  console.log(`Copied ${destinationStats.size} bytes (source: ${sourceStats.size} bytes, dimensions: ${width}x${height} px) to ${destinationPath}`);
+  const copiedBytes = readFileSync(destinationPath);
+  const { width, height, bitDepth, colorType } = validatePng(copiedBytes);
+
+  console.log(`Copied ${destinationStats.size} bytes (source: ${sourceStats.size} bytes, dimensions: ${width}x${height} px, bit depth: ${bitDepth}-bit, colour type: ${colorType}) to ${destinationPath}`);
 }
 
 main();
