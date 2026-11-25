@@ -2,8 +2,8 @@
 // Edition: Wednesday 25 November 2026
 // Purpose: Sums up the world news of Wednesday 25 November 2026 in a broadsheet newspaper poster
 // by copying entry.png to the target directory specified by MAKEFUN_OUTPUT_DIR.
-// Exit behaviour: Exits with code 0 on success; terminates with a non-zero exit code and
-// prints a descriptive error message to stderr if any verification check fails.
+// Exit behaviour: Exits with status 0 upon successful copy and verification; terminates with a
+// non-zero status and throws a descriptive error to stderr if any verification check fails.
 
 import { copyFileSync, existsSync, mkdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
