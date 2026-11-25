@@ -16,6 +16,10 @@ try {
   throw new Error(`Failed to create output directory "${outDir}": ${err instanceof Error ? err.message : String(err)}`);
 }
 
+if (!existsSync(outDir)) {
+  throw new Error(`Output directory does not exist and could not be created: ${outDir}`);
+}
+
 const srcUrl = new URL('./entry.png', import.meta.url);
 if (!existsSync(srcUrl)) {
   throw new Error(`Source poster image not found at expected path: ${srcUrl.pathname}`);
