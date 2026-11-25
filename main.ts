@@ -2,6 +2,8 @@
 // Edition: Wednesday 25 November 2026
 // Purpose: Sums up the world news of Wednesday 25 November 2026 in a broadsheet newspaper poster
 // by copying entry.png to the target directory specified by MAKEFUN_OUTPUT_DIR.
+// Exit behaviour: Exits with code 0 on success; terminates with a non-zero exit code and
+// prints a descriptive error message to stderr if any verification check fails.
 
 import { copyFileSync, existsSync, mkdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
@@ -30,6 +32,10 @@ copyFileSync(srcUrl, destPath);
 const destStats = statSync(destPath);
 if (destStats.size !== srcStats.size) {
   throw new Error(`Copied file size mismatch: expected ${srcStats.size} bytes, got ${destStats.size} bytes`);
+}
+
+if (!destStats.isFile()) {
+  throw new Error(`Copied destination is not a regular file: ${destPath}`);
 }
 
 const outputBytes = readFileSync(destPath);
