@@ -8,7 +8,10 @@
 import { copyFileSync, existsSync, mkdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 
-const outDir = process.env.MAKEFUN_OUTPUT_DIR ?? '/output';
+const outDir = process.env.MAKEFUN_OUTPUT_DIR;
+if (!outDir || outDir.trim() === '') {
+  throw new Error('Environment variable MAKEFUN_OUTPUT_DIR is required and must not be empty');
+}
 
 try {
   mkdirSync(outDir, { recursive: true });
@@ -54,4 +57,4 @@ for (let i = 0; i < pngMagic.length; i++) {
   }
 }
 
-console.log(`Copied ${destStats.size} bytes to ${destPath}`);
+console.log(`Copied ${destStats.size} bytes (source: ${srcStats.size} bytes) to ${destPath}`);
